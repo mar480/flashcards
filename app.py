@@ -11,10 +11,13 @@ import pandas as pd
 from collections import defaultdict
 import streamlit as st
 
+
+from pathlib import Path
+from typing import Union
+
 # ---------------------------
 # Data loading
 # ---------------------------
-@st.cache_data
 
 def bold_keywords(text: str, keywords: list[str]) -> str:
     """Return text with keywords wrapped in ** ** (whole-word, case-insensitive)."""
@@ -78,19 +81,51 @@ def rows_to_deck(df: pd.DataFrame) -> dict:
     return {"name": "Audit Exam Rote Learning", "source": "uploaded", "cards": cards}
 
 
-def load_any_deck(upload) -> dict:
-    """Accept .json, .csv, .xlsx; return deck dict."""
-    if upload.name.lower().endswith(".json"):
-        import json
+def load_any_deck(upload: Union[Path, str, object]) -> dict:
+    """
+    Accept Path/str (local file) or Streamlit UploadedFile, return deck dict.
+    """
+    # Path-like branch
+    if isinstance(upload, (str, Path)):
+        path = Path(upload)
+        suffix = path.suffix.lower()
+        if suffix == ".json":
+            with open(path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        elif suffix == ".csv":
+            df = pd.read_csv(path)
+            return rows_to_deck(df)
+        elif suffix in (".xlsx", ".xls"):
+            try:
+                df = pd.read_excel(path, engine="openpyxl")
+            except ImportError as e:
+                raise RuntimeError(
+                    "Excel support requires openpyxl. "
+                    "Add `openpyxl>=3.1` to requirements.txt."
+                ) from e
+            return rows_to_deck(df)
+        else:
+            raise ValueError(f"Unsupported file type: {suffix}")
+
+    # UploadedFile branch (has .name, .read, behaves file-like)
+    name = getattr(upload, "name", "").lower()
+    if name.endswith(".json"):
         return json.load(upload)
-    elif upload.name.lower().endswith(".csv"):
+    elif name.endswith(".csv"):
         df = pd.read_csv(upload)
         return rows_to_deck(df)
-    elif upload.name.lower().endswith((".xlsx", ".xls")):
-        df = pd.read_excel(upload)
+    elif name.endswith((".xlsx", ".xls")):
+        try:
+            df = pd.read_excel(upload, engine="openpyxl")
+        except ImportError as e:
+            raise RuntimeError(
+                "Excel support requires openpyxl. "
+                "Add `openpyxl>=3.1` to requirements.txt."
+            ) from e
         return rows_to_deck(df)
     else:
         raise ValueError("Unsupported file type. Upload .json, .csv, or .xlsx.")
+
 
 
 def normalize(s: str) -> str:
@@ -324,6 +359,10 @@ with st.sidebar:
     topics = sorted({c["topic"] for c in deck["cards"]})
     topic = st.selectbox("Filter by topic", options=["(All)"] + topics)
     filtered = [c for c in deck["cards"] if topic == "(All)" or c["topic"] == topic]
+
+    if "seed" not in st.session_state:
+        st.session_state.seed = int(time.time())
+
 
     st.markdown("---")
     st.markdown("### Exercise Type")
