@@ -61,19 +61,14 @@ def rows_to_deck(df: pd.DataFrame) -> dict:
             raw_img = ""
         img = str(raw_img).strip()
 
-        # ------------------ IMAGE NORMALISATION ------------------
-        # Accept values like "4", "1.jpg", "img/1.jpg", "./img/1.jpg", or URL
-        if img:
-            img = img.replace("\\", "/")  # Windows → POSIX
-            # If it's a pure number like "4", treat as stem and let resolver find extension
-            if img.isdigit():
-                img = f"img/{img}"  # extension resolved later
-            elif not img.lower().startswith(("http://", "https://")):
-                # Just a bare filename => assume under img/
-                if "/" not in img:
-                    img = f"img/{img}"
-                if img.startswith("./"):
-                    img = img[2:]
+        # ------------------ IMAGE HANDLING (simple, trust spreadsheet) ------------------
+        # Spreadsheet provides img like: "img/{int}.{ext}" (e.g., img/4.png)
+        # We trust that and only strip whitespace. No automatic prefixing or
+        # extension guessing here so we don't interfere with explicit inputs.
+        if pd.isna(raw_img):
+            img = ""
+        else:
+            img = str(raw_img).strip().replace("\\", "/")
 
         key = (topic, title, acronym)
 
@@ -152,11 +147,10 @@ def load_any_deck(upload: Union[Path, str, object]) -> dict:
 # ---------------------------
 
 def resolve_local_image_path(img: str) -> str | None:
-    """Best-effort resolver for local images.
+    """Very simple resolver: try the path as-is; if not found, try relative to CWD.
 
-    Handles: bare numbers ("4"), filenames with or without folder, and cases
-    where the provided extension doesn't actually exist on disk (e.g. sheet has
-    "4.jpg" but file is "4.png"). Tries sibling extensions with same stem.
+    We keep the earlier richer fallback (extensions, img/ folder) but only after
+    checking the explicit path to avoid interfering with correct inputs.
     """
     if not img:
         return None
@@ -164,8 +158,29 @@ def resolve_local_image_path(img: str) -> str | None:
     def _exists(p: Path) -> str | None:
         return str(p) if p.exists() else None
 
-    # Normalise slashes
-    img = img.replace("\\", "/").lstrip("./")
+    # 1) As provided
+    p = Path(img)
+    if p.exists():
+        return str(p)
+
+    # 2) Relative to working directory
+    cwd = Path.cwd()
+    for cand in [cwd / img, cwd / "img" / Path(img).name, cwd / Path(img.lstrip("./"))]:
+        res = _exists(cand)
+        if res:
+            return res
+
+    # 3) Non-interfering extensions fallback (only if nothing found)
+    stem = Path(img).stem
+    exts = [".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp"]
+    for folder in [cwd / "img", cwd]:
+        for ext in exts:
+            cand = folder / f"{stem}{ext}"
+            res = _exists(cand)
+            if res:
+                return res
+
+    return None
 
     repo_root = Path.cwd()
     img_dir = repo_root / "img"
@@ -243,6 +258,7 @@ def show_card_image(card: dict, debug: bool = False):
     raw = (card.get("img") or "").strip()
     if debug:
         st.caption(f"Raw img from card: '{raw or '(empty)'}'")
+        st.caption(f"CWD: {Path.cwd()}")
 
     if not raw:
         if debug:
@@ -257,7 +273,7 @@ def show_card_image(card: dict, debug: bool = False):
             st.image(raw, caption=None, use_container_width=True)
             return
 
-        # Local path resolution
+        # Local path resolution (minimal, non-interfering)
         local = resolve_local_image_path(raw)
         if local:
             if debug:
@@ -265,7 +281,11 @@ def show_card_image(card: dict, debug: bool = False):
             st.image(local, caption=None, use_container_width=True)
         else:
             if debug:
+                # Helpful quick peek at the img folder contents (first 20 entries)
+                img_dir = Path.cwd() / "img"
+                listing = ", ".join([p.name for p in sorted(img_dir.glob('*'))[:20]]) if img_dir.exists() else "(no img dir)"
                 st.error(f"Image not found after resolution attempts: {raw}")
+                st.caption(f"img/ listing: {listing}")
 
     except Exception as e:
         if debug:
