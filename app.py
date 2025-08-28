@@ -64,7 +64,7 @@ def rows_to_deck(df: pd.DataFrame) -> dict:
         # ------------------ IMAGE NORMALISATION ------------------
         # Accept values like "4", "1.jpg", "img/1.jpg", "./img/1.jpg", or URL
         if img:
-            img = img.replace("\", "/")  # Windows → POSIX
+            img = img.replace("\\", "/")  # Windows → POSIX
             # If it's a pure number like "4", treat as stem and let resolver find extension
             if img.isdigit():
                 img = f"img/{img}"  # extension resolved later
