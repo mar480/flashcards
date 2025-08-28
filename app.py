@@ -522,7 +522,7 @@ with answer_box.container():
         for it in card["items"]:
             st.write(f"- **{it['letter']}** → {it['text']}")
 
-with st.expander("Show full answer", expanded=False, key=f"expander_{st.session_state.expander_key}"):
+with st.expander("Show full answer", expanded=False):
     st.markdown(f"**Title:** {card['title']}  \n**Acronym:** `{card['acronym']}`")
     st.write("**Items:**")
     for it in card["items"]:
