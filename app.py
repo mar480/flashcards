@@ -165,7 +165,7 @@ def resolve_local_image_path(img: str) -> str | None:
         return str(p) if p.exists() else None
 
     # Normalise slashes
-    img = img.replace("\", "/").lstrip("./")
+    img = img.replace("\\", "/").lstrip("./")
 
     repo_root = Path.cwd()
     img_dir = repo_root / "img"
