@@ -9,6 +9,8 @@ import pandas as pd
 from collections import defaultdict
 import streamlit as st
 
+from pathlib import Path
+BASE_DIR = Path(__file__).resolve().parent
 # ---------------------------
 # Text helpers
 # ---------------------------
@@ -57,14 +59,16 @@ def rows_to_deck(df: pd.DataFrame) -> dict:
         bold_list = [w.strip() for w in bold_raw.split(",") if w.strip()]
 
         raw_img = r.get("img", "")
+        if pd.isna(raw_img):
+            raw_img = ""
+        img = str(raw_img).strip()
+
+        raw_img = r.get("img", "")
         img = "" if pd.isna(raw_img) else str(raw_img).strip().replace("\\", "/")
 
         key = (topic, title, acronym)
-
-        # Keep the FIRST non-empty image we see for this card
         if img and key not in imgs:
             imgs[key] = img
-
 
         groups[key].append(
             {
@@ -93,35 +97,27 @@ def rows_to_deck(df: pd.DataFrame) -> dict:
 
 
 def load_any_deck(upload: Union[Path, str, object]) -> dict:
-    """Accept Path/str (local file) or Streamlit UploadedFile, return deck dict."""
+    """Excel-only deck loader.
+
+    Accepts either a filesystem path to an Excel file or a Streamlit UploadedFile.
+    We intentionally do NOT support JSON/CSV or deck.json.
+    Expected sheet has the canonical columns used by rows_to_deck().
+    """
     if isinstance(upload, (str, Path)):
         path = Path(upload)
-        suffix = path.suffix.lower()
-        if suffix == ".json":
-            with open(path, "r", encoding="utf-8") as f:
-                return json.load(f)
-        elif suffix == ".csv":
-            df = pd.read_csv(path)
-            return rows_to_deck(df)
-        elif suffix in (".xlsx", ".xls"):
-            try:
-                df = pd.read_excel(path, engine="openpyxl")
-            except ImportError as e:
-                raise RuntimeError(
-                    "Excel support requires openpyxl. Add `openpyxl>=3.1` to requirements.txt."
-                ) from e
-            return rows_to_deck(df)
-        else:
-            raise ValueError(f"Unsupported file type: {suffix}")
-
-    # UploadedFile branch
-    name = getattr(upload, "name", "").lower()
-    if name.endswith(".json"):
-        return json.load(upload)
-    elif name.endswith(".csv"):
-        df = pd.read_csv(upload)
+        if path.suffix.lower() not in (".xlsx", ".xls"):
+            raise ValueError("Only Excel files are supported (.xlsx, .xls).")
+        try:
+            df = pd.read_excel(path, engine="openpyxl")
+        except ImportError as e:
+            raise RuntimeError(
+                "Excel support requires openpyxl. Add `openpyxl>=3.1` to requirements.txt."
+            ) from e
         return rows_to_deck(df)
-    elif name.endswith((".xlsx", ".xls")):
+
+    # UploadedFile branch (Streamlit)
+    name = getattr(upload, "name", "").lower()
+    if name.endswith((".xlsx", ".xls")):
         try:
             df = pd.read_excel(upload, engine="openpyxl")
         except ImportError as e:
@@ -129,14 +125,12 @@ def load_any_deck(upload: Union[Path, str, object]) -> dict:
                 "Excel support requires openpyxl. Add `openpyxl>=3.1` to requirements.txt."
             ) from e
         return rows_to_deck(df)
-    else:
-        raise ValueError("Unsupported file type. Upload .json, .csv, or .xlsx.")
+
+    raise ValueError("Only Excel uploads are supported (.xlsx, .xls).")
 
 # ---------------------------
 # Image helpers
 # ---------------------------
-
-BASE_DIR = Path(__file__).resolve().parent
 
 def resolve_local_image_path(img: str) -> str | None:
     """
@@ -144,12 +138,13 @@ def resolve_local_image_path(img: str) -> str | None:
     - Trust the spreadsheet: expects "img/{integer}.{ext}".
     - Resolve relative to the folder containing this file (BASE_DIR),
       not the current working directory.
-    - No guessing/prefixing if the file isn't there.
+    - No prefixing or extension guessing: load exactly what the sheet says.
     """
     if not img:
         return None
 
     p = Path(img)
+
     # 1) Absolute / already-correct path
     if p.exists():
         return str(p)
@@ -159,8 +154,8 @@ def resolve_local_image_path(img: str) -> str | None:
     if p2.exists():
         return str(p2)
 
-    # 3) Also try "<BASE_DIR>/img/<filename>" if user passed only a filename
-    if p.name == img:  # means no folder part
+    # 3) If the sheet gave only a filename (no folder), try BASE_DIR/img/<filename>
+    if p.name == img:  # no folder component present
         p3 = (BASE_DIR / "img" / img).resolve()
         if p3.exists():
             return str(p3)
@@ -172,7 +167,6 @@ def show_card_image(card: dict, debug: bool = False):
     raw = (card.get("img") or "").strip()
     if debug:
         st.caption(f"Raw img from card: '{raw or '(empty)'}'")
-        st.caption(f"BASE_DIR: {BASE_DIR}")
         st.caption(f"CWD: {Path.cwd()}")
 
     if not raw:
@@ -377,22 +371,30 @@ st.title("🗂️ Rote Learning Cards")
 with st.sidebar:
     st.markdown("### Deck")
     deck_file = st.file_uploader(
-        "Upload a deck (.json, .csv, .xlsx)", type=["json", "csv", "xlsx", "xls"]
+        "Upload a deck (.xlsx or .xls)", type=["xlsx", "xls"]
     )
 
-    if deck_file:
+    # Reuse existing deck unless a new file is uploaded
+    if "deck" in st.session_state and not deck_file:
+        deck = st.session_state["deck"]
+    elif deck_file:
         try:
             deck = load_any_deck(deck_file)
+            st.session_state["deck"] = deck
             st.success(f"Loaded {len(deck['cards'])} cards from {deck_file.name}")
         except Exception as e:
             st.error(f"Failed to load deck: {e}")
             st.stop()
     else:
-        default_path = Path("deck.json")
-        if not default_path.exists():
-            st.info("Upload a deck or add a `deck.json` next to app.py.")
+        # Start-up default: try the Excel template if present
+        excel_default = Path("flashcards_template.xlsx")
+        if excel_default.exists():
+            deck = load_any_deck(excel_default)
+            st.session_state["deck"] = deck
+            st.caption("Loaded default deck from flashcards_template.xlsx")
+        else:
+            st.info("Upload an Excel deck (.xlsx/.xls) or add `flashcards_template.xlsx` next to app.py.")
             st.stop()
-        deck = load_any_deck(default_path)
 
     topics = sorted({c["topic"] for c in deck["cards"]})
     topic = st.selectbox("Filter by topic", options=["(All)"] + topics)
