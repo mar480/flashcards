@@ -394,19 +394,35 @@ with st.sidebar:
         "Upload a deck (.json, .csv, .xlsx)", type=["json", "csv", "xlsx", "xls"]
     )
 
-    if deck_file:
+    # Reuse existing deck unless a new file is uploaded
+    if "deck" in st.session_state and not deck_file:
+        deck = st.session_state["deck"]
+
+    elif deck_file:
         try:
             deck = load_any_deck(deck_file)
+            st.session_state["deck"] = deck
             st.success(f"Loaded {len(deck['cards'])} cards from {deck_file.name}")
         except Exception as e:
             st.error(f"Failed to load deck: {e}")
             st.stop()
+
     else:
-        default_path = Path("deck.json")
-        if not default_path.exists():
-            st.info("Upload a deck or add a `deck.json` next to app.py.")
+        # Start-up default: prefer the Excel template if present, otherwise deck.json
+        excel_default = Path("flashcards_template.xlsx")
+        json_default = Path("deck.json")
+
+        if excel_default.exists():
+            deck = load_any_deck(excel_default)
+            st.session_state["deck"] = deck
+            st.caption("Loaded default deck from flashcards_template.xlsx")
+        elif json_default.exists():
+            deck = load_any_deck(json_default)
+            st.session_state["deck"] = deck
+            st.caption("Loaded default deck from deck.json")
+        else:
+            st.info("Upload a deck, or add `flashcards_template.xlsx` or `deck.json` next to app.py.")
             st.stop()
-        deck = load_any_deck(default_path)
 
     topics = sorted({c["topic"] for c in deck["cards"]})
     topic = st.selectbox("Filter by topic", options=["(All)"] + topics)
