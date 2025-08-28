@@ -1,15 +1,13 @@
-import json
 import random
 import re
 import time
 from pathlib import Path
-from typing import List, Dict, Union
+from typing import Dict, Union
 
 import pandas as pd
 from collections import defaultdict
 import streamlit as st
 
-from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent
 # ---------------------------
 # Text helpers
@@ -362,6 +360,31 @@ def exercise_missing_keywords(card: Dict, difficulty: str = "medium"):
             )
         st.success("All correct! 🎉" if all(answers_ok) else "Keep going!")
 
+def mask_text(s: str, difficulty: str = "medium") -> str:
+    """
+    Simple keyword masking for the 'Missing key words' mode:
+      - easy: mask vowels
+      - medium: mask every second character (letters only)
+      - hard: mask all letters (leave spaces/punct)
+    """
+    if difficulty == "easy":
+        return re.sub(r"[aeiouAEIOU]", "_", s)
+    elif difficulty == "hard":
+        return re.sub(r"[A-Za-z]", "_", s)
+    else:
+        # medium
+        out = []
+        keep = True
+        for ch in s:
+            if ch.isalpha():
+                out.append(ch if keep else "_")
+                keep = not keep
+            else:
+                out.append(ch)
+        return "".join(out)
+
+def verdict_icon(ok: bool) -> str:
+    return "✅" if ok else "❌"
 
 # ---------------------------
 # UI & Layout
