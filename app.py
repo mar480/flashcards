@@ -42,7 +42,6 @@ def rows_to_deck(df: pd.DataFrame) -> dict:
     cols = {c.lower(): c for c in df.columns}
     df2 = df.rename(columns=cols)
 
-    from collections import defaultdict
     groups = defaultdict(list)
     imgs = {}
 
@@ -54,7 +53,20 @@ def rows_to_deck(df: pd.DataFrame) -> dict:
         text = str(r["text"]).strip()
         bold_raw = str(r.get("bold_words", "") or "").strip()
         bold_list = [w.strip() for w in bold_raw.split(",") if w.strip()]
-        img = str(r.get("img", "") or "").strip()  # <-- NEW
+        raw_img = r.get("img", "")
+        if pd.isna(raw_img):
+            raw_img = ""
+        img = str(raw_img).strip()
+
+        if img:
+            img = img.replace("\\", "/")  # Windows → POSIX
+            if not img.lower().startswith(("http://", "https://")):
+                # if they wrote just "1.jpg", assume img/1.jpg
+                if "/" not in img:
+                    img = f"img/{img}"
+                if img.startswith("./"):
+                    img = img[2:]
+
 
         # keep the first non-empty img we see for the card
         key = (topic, title, acronym)
@@ -407,7 +419,7 @@ with st.sidebar:
             st.stop()
         deck = load_any_deck(default_path)
 
-
+    
     topics = sorted({c["topic"] for c in deck["cards"]})
     topic = st.selectbox("Filter by topic", options=["(All)"] + topics)
     filtered = [c for c in deck["cards"] if topic == "(All)" or c["topic"] == topic]
