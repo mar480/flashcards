@@ -511,9 +511,18 @@ st.markdown("---")
 answer_box = st.empty()
 
 # single expander; label carries a nonce so state doesn't persist
+# with answer_box.container():
+#     with st.expander(f"Show full answer · {st.session_state.get('expander_key', 0)}",
+#                      expanded=False):
+#         st.markdown(f"**Title:** {card['title']}  \n**Acronym:** `{card['acronym']}`")
+#         st.write("**Items:**")
+#         for it in card["items"]:
+#             st.write(f"- **{it['letter']}** → {it['text']}")
+
 with answer_box.container():
-    with st.expander(f"Show full answer · {st.session_state.get('expander_key', 0)}",
-                     expanded=False):
+    with st.expander("Show full answer",
+                     expanded=False,
+                     key=f"answer_expander_{st.session_state.get('expander_key', 0)}"):
         st.markdown(f"**Title:** {card['title']}  \n**Acronym:** `{card['acronym']}`")
         st.write("**Items:**")
         for it in card["items"]:
