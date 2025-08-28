@@ -58,8 +58,15 @@ def rows_to_deck(df: pd.DataFrame) -> dict:
 
         # keep the first non-empty img we see for the card
         key = (topic, title, acronym)
-        if img and key not in imgs:
-            imgs[key] = img
+        if img:
+            img = img.replace("\\", "/")              # Windows → POSIX
+            if not img.lower().startswith(("http://", "https://")):
+                # if they wrote just "1.jpg", assume it's in img/
+                if "/" not in img:
+                    img = f"img/{img}"
+                # collapse accidental leading "./"
+                if img.startswith("./"):
+                    img = img[2:]
 
         groups[key].append({
             "letter": letter,
@@ -149,23 +156,68 @@ def render_title_banner(card: dict):
         unsafe_allow_html=True
     )
 
-def show_card_image(card: dict):
+def resolve_local_image_path(img: str) -> str | None:
+    """
+    Given an img value (possibly 'img/1.jpg', '1.jpg', './img/1.jpg'),
+    try sensible locations and return a readable path or None.
+    """
+    from pathlib import Path
+
+    if not img:
+        return None
+
+    p = Path(img)
+    if p.exists():
+        return str(p)
+
+    # Try relative to repo root explicitly
+    repo_root = Path(".").resolve()
+    candidates = [
+        repo_root / img,
+        repo_root / "img" / Path(img).name,  # just the basename in /img
+        repo_root / Path(img.lstrip("./")),  # strip leading ./ if present
+    ]
+    for c in candidates:
+        if c.exists():
+            return str(c)
+
+    return None
+
+
+def show_card_image(card: dict, debug: bool = False):
     img = (card.get("img") or "").strip()
     if not img:
+        if debug:
+            st.caption("No `img` specified for this card.")
         return
     try:
+        # Remote URL?
         if img.lower().startswith(("http://", "https://")):
+            if debug:
+                st.caption(f"Loading remote image: {img}")
             st.image(img, caption=None, use_container_width=True)
+            return
+
+        # Try local paths
+        local = resolve_local_image_path(img)
+        if local:
+            if debug:
+                st.caption(f"Loading local image: {local}")
+            st.image(local, caption=None, use_container_width=True)
         else:
-            p = Path(img)
-            if p.exists():
-                st.image(str(p), caption=None, use_container_width=True)
-            else:
-                # Silent if missing; uncomment to debug:
-                # st.caption(f"Image not found: {img}")
-                pass
-    except Exception:
-        pass
+            # As a last resort, try prefixing with img/ at display time
+            fallback = resolve_local_image_path(f"img/{Path(img).name}")
+            if fallback:
+                if debug:
+                    st.caption(f"Fallback path resolved: {fallback}")
+                st.image(fallback, caption=None, use_container_width=True)
+            elif debug:
+                st.error(f"Image not found: {img}")
+
+    except Exception as e:
+        if debug:
+            st.error(f"Image load error for '{img}': {e}")
+
 
 def mask_text(s: str, difficulty: str = "medium") -> str:
     """
@@ -388,6 +440,7 @@ with st.sidebar:
     else:
         prefill_ratio = 0.4
 
+    show_img_debug = st.checkbox("Debug images", value=False)
     st.markdown("---")
     if st.button("🎲 New Card"):
         st.session_state.seed = int(time.time())
@@ -407,6 +460,7 @@ left, right = st.columns([2, 1], vertical_alignment="top")
 
 with right:
     # image on the right column
+    show_card_image(card, debug=show_img_debug)
     show_card_image(card)
 
 with left:
