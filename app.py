@@ -433,9 +433,8 @@ with st.sidebar:
 
     if "seed" not in st.session_state:
         st.session_state.seed = int(time.time())
-    if "expander_nonce" not in st.session_state:
-        st.session_state.expander_nonce = 0
-
+    if "expander_key" not in st.session_state:
+        st.session_state.expander_key = 0
 
     st.markdown("---")
     st.markdown("### Exercise Type")
@@ -471,7 +470,7 @@ with st.sidebar:
         st.session_state.seed = int(time.time())
         reset_inputs()
         st.session_state["show_answer"] = False  # collapse the expander
-        st.session_state["expander_nonce"] = st.session_state.get("expander_nonce", 0) + 1
+        st.session_state.expander_key += 1 
 
 # Pick a card deterministically from seed
 if not filtered:
@@ -510,9 +509,7 @@ with left:
         exercise_missing_keywords(card, difficulty=difficulty or "medium")
 
 st.markdown("---")
-_nonce = st.session_state.get("expander_nonce", 0)
-label = "Show full answer" + ("•" * _nonce)
-with st.expander("Show full answer", expanded=st.session_state.get("show_answer", False)):
+with st.expander("Show full answer", expanded=False, key=f"expander_{st.session_state.expander_key}"):
     st.markdown(f"**Title:** {card['title']}  \n**Acronym:** `{card['acronym']}`")
     st.write("**Items:**")
     for it in card["items"]:
