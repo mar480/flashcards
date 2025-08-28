@@ -57,24 +57,14 @@ def rows_to_deck(df: pd.DataFrame) -> dict:
         bold_list = [w.strip() for w in bold_raw.split(",") if w.strip()]
 
         raw_img = r.get("img", "")
-        if pd.isna(raw_img):
-            raw_img = ""
-        img = str(raw_img).strip()
-
-        # ------------------ IMAGE HANDLING (simple, trust spreadsheet) ------------------
-        # Spreadsheet provides img like: "img/{int}.{ext}" (e.g., img/4.png)
-        # We trust that and only strip whitespace. No automatic prefixing or
-        # extension guessing here so we don't interfere with explicit inputs.
-        if pd.isna(raw_img):
-            img = ""
-        else:
-            img = str(raw_img).strip().replace("\\", "/")
+        img = "" if pd.isna(raw_img) else str(raw_img).strip().replace("\\", "/")
 
         key = (topic, title, acronym)
 
-        # Keep the FIRST non-empty image we encounter for this (topic,title,acronym)
+        # Keep the FIRST non-empty image we see for this card
         if img and key not in imgs:
             imgs[key] = img
+
 
         groups[key].append(
             {
@@ -146,110 +136,34 @@ def load_any_deck(upload: Union[Path, str, object]) -> dict:
 # Image helpers
 # ---------------------------
 
-def resolve_local_image_path(img: str) -> str | None:
-    """Very simple resolver: try the path as-is; if not found, try relative to CWD.
+BASE_DIR = Path(__file__).resolve().parent
 
-    We keep the earlier richer fallback (extensions, img/ folder) but only after
-    checking the explicit path to avoid interfering with correct inputs.
+def resolve_local_image_path(img: str) -> str | None:
+    """
+    Simple + reliable:
+    - Trust the spreadsheet: expects "img/{integer}.{ext}".
+    - Resolve relative to the folder containing this file (BASE_DIR),
+      not the current working directory.
+    - No guessing/prefixing if the file isn't there.
     """
     if not img:
         return None
 
-    def _exists(p: Path) -> str | None:
-        return str(p) if p.exists() else None
-
-    # 1) As provided
     p = Path(img)
+    # 1) Absolute / already-correct path
     if p.exists():
         return str(p)
 
-    # 2) Relative to working directory
-    cwd = Path.cwd()
-    for cand in [cwd / img, cwd / "img" / Path(img).name, cwd / Path(img.lstrip("./"))]:
-        res = _exists(cand)
-        if res:
-            return res
+    # 2) Relative to app code location
+    p2 = (BASE_DIR / img).resolve()
+    if p2.exists():
+        return str(p2)
 
-    # 3) Non-interfering extensions fallback (only if nothing found)
-    stem = Path(img).stem
-    exts = [".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp"]
-    for folder in [cwd / "img", cwd]:
-        for ext in exts:
-            cand = folder / f"{stem}{ext}"
-            res = _exists(cand)
-            if res:
-                return res
-
-    return None
-
-    repo_root = Path.cwd()
-    img_dir = repo_root / "img"
-    candidates: list[Path] = []
-
-    # If it's just a bare name like "4" or "4.jpg"
-    name = Path(img).name
-    base_stem = Path(name).stem
-    has_ext = Path(name).suffix != ""
-
-    # Primary candidates: honour the given path as-is and common fallbacks
-    p = Path(img)
-    candidates.extend([
-        repo_root / p,
-        img_dir / name,
-        repo_root / name,
-    ])
-
-    # If not found yet, try sibling extensions for same stem in /img and repo root
-    exts = [".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp"]
-
-    # If no extension OR the exact file doesn't exist, try other extensions
-    for folder in [img_dir, repo_root]:
-        for ext in exts:
-            cand = folder / f"{base_stem}{ext}"
-            candidates.append(cand)
-
-    # Deduplicate while preserving order
-    seen = set()
-    ordered = []
-    for c in candidates:
-        if c not in seen:
-            seen.add(c)
-            ordered.append(c)
-
-    for c in ordered:
-        res = _exists(c)
-        if res:
-            return res
-
-    return None
-
-    def _exists(p: Path) -> str | None:
-        return str(p) if p.exists() else None
-
-    p = Path(img)
-    if p.exists():
-        return str(p)
-
-    repo_root = Path.cwd()
-    candidates = [
-        repo_root / img,
-        repo_root / "img" / Path(img).name,
-        repo_root / Path(img.lstrip("./")),
-    ]
-    for c in candidates:
-        res = _exists(c)
-        if res:
-            return res
-
-    # If no suffix given, try common extensions
-    stem = Path(img).stem
-    if "." not in Path(img).name:  # rough check for "no extension"
-        for folder in [repo_root / "img", repo_root]:
-            for ext in [".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp"]:
-                candidate = folder / f"{stem}{ext}"
-                res = _exists(candidate)
-                if res:
-                    return res
+    # 3) Also try "<BASE_DIR>/img/<filename>" if user passed only a filename
+    if p.name == img:  # means no folder part
+        p3 = (BASE_DIR / "img" / img).resolve()
+        if p3.exists():
+            return str(p3)
 
     return None
 
