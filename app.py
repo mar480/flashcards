@@ -5,15 +5,93 @@ import time
 from pathlib import Path
 from typing import List, Dict
 
+import io
+import pandas as pd
+
+from collections import defaultdict
 import streamlit as st
 
 # ---------------------------
 # Data loading
 # ---------------------------
 @st.cache_data
-def load_deck(path: str | Path) -> Dict:
-    with open(path, "r", encoding="utf-8") as f:
-        return json.load(f)
+
+def bold_keywords(text: str, keywords: list[str]) -> str:
+    """Return text with keywords wrapped in ** ** (whole-word, case-insensitive)."""
+    if not keywords:
+        return text
+    out = text
+    for kw in keywords:
+        kw = kw.strip()
+        if not kw:
+            continue
+        # \bword\b with case-insensitive replacement
+        out = re.sub(rf"\b({re.escape(kw)})\b", r"**\1**", out, flags=re.IGNORECASE)
+    return out
+
+def rows_to_deck(df: pd.DataFrame) -> dict:
+    required = {"topic", "title", "acronym", "letter", "text"}
+    missing = required - set(map(str.lower, df.columns))
+    if missing:
+        raise ValueError(f"Missing required columns: {', '.join(missing)}")
+
+    # Normalize column names
+    cols = {c.lower(): c for c in df.columns}
+    df2 = df.rename(columns=cols)
+
+    from collections import defaultdict
+    groups = defaultdict(list)
+    imgs = {}
+
+    for _, r in df2.iterrows():
+        topic = str(r["topic"]).strip()
+        title = str(r["title"]).strip()
+        acronym = str(r["acronym"]).strip()
+        letter = str(r["letter"]).strip()
+        text = str(r["text"]).strip()
+        bold_raw = str(r.get("bold_words", "") or "").strip()
+        bold_list = [w.strip() for w in bold_raw.split(",") if w.strip()]
+        img = str(r.get("img", "") or "").strip()  # <-- NEW
+
+        # keep the first non-empty img we see for the card
+        key = (topic, title, acronym)
+        if img and key not in imgs:
+            imgs[key] = img
+
+        groups[key].append({
+            "letter": letter,
+            "text": bold_keywords(text, bold_list),
+            "plain_text": text,
+        })
+
+    cards = []
+    for (topic, title, acronym), items in groups.items():
+        order = {ch: i for i, ch in enumerate(acronym)}
+        items.sort(key=lambda it: order.get(it["letter"], 999))
+        cards.append({
+            "topic": topic,
+            "title": title,
+            "acronym": acronym,
+            "img": imgs.get((topic, title, acronym), ""),  # <-- NEW
+            "items": items,
+        })
+    return {"name": "Audit Exam Rote Learning", "source": "uploaded", "cards": cards}
+
+
+def load_any_deck(upload) -> dict:
+    """Accept .json, .csv, .xlsx; return deck dict."""
+    if upload.name.lower().endswith(".json"):
+        import json
+        return json.load(upload)
+    elif upload.name.lower().endswith(".csv"):
+        df = pd.read_csv(upload)
+        return rows_to_deck(df)
+    elif upload.name.lower().endswith((".xlsx", ".xls")):
+        df = pd.read_excel(upload)
+        return rows_to_deck(df)
+    else:
+        raise ValueError("Unsupported file type. Upload .json, .csv, or .xlsx.")
+
 
 def normalize(s: str) -> str:
     return re.sub(r"\s+", " ", s.strip().lower())
@@ -21,6 +99,39 @@ def normalize(s: str) -> str:
 # ---------------------------
 # UI helpers
 # ---------------------------
+
+from pathlib import Path
+
+def render_title_banner(card: dict):
+    st.markdown(
+        f"""
+        <div style="
+            background:#166534; color:#fff; padding:12px 16px; 
+            border-radius:8px; font-weight:600; letter-spacing:0.2px;">
+            {card['title']}
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+def show_card_image(card: dict):
+    img = (card.get("img") or "").strip()
+    if not img:
+        return
+    try:
+        if img.lower().startswith(("http://", "https://")):
+            st.image(img, caption=None, use_container_width=True)
+        else:
+            p = Path(img)
+            if p.exists():
+                st.image(str(p), caption=None, use_container_width=True)
+            else:
+                # Silent if missing; uncomment to debug:
+                # st.caption(f"Image not found: {img}")
+                pass
+    except Exception:
+        pass
+
 def mask_text(s: str, difficulty: str = "medium") -> str:
     """
     Simple keyword masking for the 'Missing key words' mode:
@@ -192,21 +303,23 @@ st.set_page_config(page_title="Rote Cards", page_icon="🗂️", layout="centere
 st.title("🗂️ Rote Learning Cards")
 with st.sidebar:
     st.markdown("### Deck")
-    deck_file = st.file_uploader("Upload a deck.json (optional)", type=["json"])
-    if "seed" not in st.session_state:
-        st.session_state.seed = int(time.time())  # new session seed
-
-    rng = random.Random(st.session_state.seed)
+    deck_file = st.file_uploader("Upload a deck (.json, .csv, .xlsx)", type=["json", "csv", "xlsx", "xls"])
 
     if deck_file:
-        deck = json.load(deck_file)
+        try:
+            deck = load_any_deck(deck_file)
+            st.success(f"Loaded {len(deck['cards'])} cards from {deck_file.name}")
+        except Exception as e:
+            st.error(f"Failed to load deck: {e}")
+            st.stop()
     else:
-        # Fallback to local file
+        # Fallback to local JSON if no upload
         default_path = Path("deck.json")
         if not default_path.exists():
-            st.error("No `deck.json` found. Upload a deck or add one beside app.py.")
+            st.info("Upload a deck or add a `deck.json` next to app.py.")
             st.stop()
-        deck = load_deck(default_path)
+        deck = load_any_deck(default_path)
+
 
     topics = sorted({c["topic"] for c in deck["cards"]})
     topic = st.selectbox("Filter by topic", options=["(All)"] + topics)
@@ -248,19 +361,30 @@ if not filtered:
 idx = random.Random(st.session_state.seed).randint(0, len(filtered) - 1)
 card = filtered[idx]
 
-# Render the chosen exercise
-if mode == "Card heading only":
-    exercise_heading_only(card)
-elif mode == "Card heading + acronym":
-    exercise_heading_plus_acronym(card)
-elif mode == "Acronym only":
-    exercise_acronym_only(card)
-elif mode == "Letters down the side (all blank)":
-    exercise_letters_blank(card)
-elif mode == "Letters down the side (some prefilled)":
-    exercise_letters_some_prefilled(card, prefill_ratio=prefill_ratio)
-elif mode == "Missing key words":
-    exercise_missing_keywords(card, difficulty=difficulty or "medium")
+# --- Layout per wireframe ---
+render_title_banner(card)  # top banner
+
+left, right = st.columns([2, 1], vertical_alignment="start")
+
+with right:
+    # image on the right column
+    show_card_image(card)
+
+with left:
+    # render the exercise content on the left column
+    if mode == "Card heading only":
+        exercise_heading_only(card)
+    elif mode == "Card heading + acronym":
+        exercise_heading_plus_acronym(card)
+    elif mode == "Acronym only":
+        exercise_acronym_only(card)
+    elif mode == "Letters down the side (all blank)":
+        exercise_letters_blank(card)
+    elif mode == "Letters down the side (some prefilled)":
+        exercise_letters_some_prefilled(card, prefill_ratio=prefill_ratio)
+    elif mode == "Missing key words":
+        exercise_missing_keywords(card, difficulty=difficulty or "medium")
+
 
 st.markdown("---")
 with st.expander("Show full answer"):
