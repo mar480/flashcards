@@ -172,6 +172,7 @@ def show_card_image(card: dict, debug: bool = False):
     raw = (card.get("img") or "").strip()
     if debug:
         st.caption(f"Raw img from card: '{raw or '(empty)'}'")
+        st.caption(f"BASE_DIR: {BASE_DIR}")
         st.caption(f"CWD: {Path.cwd()}")
 
     if not raw:
