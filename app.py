@@ -403,7 +403,7 @@ card = filtered[idx]
 # --- Layout per wireframe ---
 render_title_banner(card)  # top banner
 
-left, right = st.columns([2, 1], vertical_alignment="start")
+left, right = st.columns([2, 1], vertical_alignment="top")
 
 with right:
     # image on the right column
