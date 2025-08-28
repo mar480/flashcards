@@ -178,7 +178,7 @@ def show_card_image(card: dict, debug: bool = False):
             if debug:
                 st.caption(f"Loading remote image: {raw}")
             st.markdown("<div style='margin-top:1em'></div>", unsafe_allow_html=True)
-            st.image(raw, caption=None, use_container_width=True)
+            st.image(raw, caption=None, width="stretch")
             return
 
         # Local path resolution (minimal, non-interfering)
@@ -187,7 +187,7 @@ def show_card_image(card: dict, debug: bool = False):
             if debug:
                 st.caption(f"Loading local image: {local}")
             st.markdown("<div style='margin-top:1em'></div>", unsafe_allow_html=True)
-            st.image(local, caption=None, use_container_width=True)
+            st.image(local, caption=None, width="stretch")
         else:
             if debug:
                 # Helpful quick peek at the img folder contents (first 20 entries)
@@ -469,8 +469,7 @@ with st.sidebar:
     if st.button("🎲 New Card"):
         st.session_state.seed = int(time.time())
         reset_inputs()
-        st.session_state["show_answer"] = False  # collapse the expander
-        st.session_state.expander_key += 1 
+        st.session_state["reset_answer_box"] = True
 
 # Pick a card deterministically from seed
 if not filtered:
@@ -509,6 +508,20 @@ with left:
         exercise_missing_keywords(card, difficulty=difficulty or "medium")
 
 st.markdown("---")
+answer_box = st.empty()
+
+# Collapse/refresh the expander when requested
+if st.session_state.get("reset_answer_box"):
+    answer_box.empty()
+    st.session_state["reset_answer_box"] = False
+
+with answer_box.container():
+    with st.expander("Show full answer", expanded=False):
+        st.markdown(f"**Title:** {card['title']}  \n**Acronym:** `{card['acronym']}`")
+        st.write("**Items:**")
+        for it in card["items"]:
+            st.write(f"- **{it['letter']}** → {it['text']}")
+
 with st.expander("Show full answer", expanded=False, key=f"expander_{st.session_state.expander_key}"):
     st.markdown(f"**Title:** {card['title']}  \n**Acronym:** `{card['acronym']}`")
     st.write("**Items:**")
