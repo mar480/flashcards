@@ -62,10 +62,13 @@ def rows_to_deck(df: pd.DataFrame) -> dict:
         img = str(raw_img).strip()
 
         # ------------------ IMAGE NORMALISATION ------------------
-        # Accept values like "1.jpg", "img/1.jpg", "./img/1.jpg", or URL
+        # Accept values like "4", "1.jpg", "img/1.jpg", "./img/1.jpg", or URL
         if img:
-            img = img.replace("\\", "/")  # Windows → POSIX
-            if not img.lower().startswith(("http://", "https://")):
+            img = img.replace("\", "/")  # Windows → POSIX
+            # If it's a pure number like "4", treat as stem and let resolver find extension
+            if img.isdigit():
+                img = f"img/{img}"  # extension resolved later
+            elif not img.lower().startswith(("http://", "https://")):
                 # Just a bare filename => assume under img/
                 if "/" not in img:
                     img = f"img/{img}"
@@ -149,13 +152,61 @@ def load_any_deck(upload: Union[Path, str, object]) -> dict:
 # ---------------------------
 
 def resolve_local_image_path(img: str) -> str | None:
-    """Return a readable path for a possibly-relative image reference.
+    """Best-effort resolver for local images.
 
-    Tries several sensible locations and also attempts common extensions if the
-    provided value has no suffix (e.g. "img/1" -> try jpg/png/jpeg/webp/gif/bmp).
+    Handles: bare numbers ("4"), filenames with or without folder, and cases
+    where the provided extension doesn't actually exist on disk (e.g. sheet has
+    "4.jpg" but file is "4.png"). Tries sibling extensions with same stem.
     """
     if not img:
         return None
+
+    def _exists(p: Path) -> str | None:
+        return str(p) if p.exists() else None
+
+    # Normalise slashes
+    img = img.replace("\", "/").lstrip("./")
+
+    repo_root = Path.cwd()
+    img_dir = repo_root / "img"
+    candidates: list[Path] = []
+
+    # If it's just a bare name like "4" or "4.jpg"
+    name = Path(img).name
+    base_stem = Path(name).stem
+    has_ext = Path(name).suffix != ""
+
+    # Primary candidates: honour the given path as-is and common fallbacks
+    p = Path(img)
+    candidates.extend([
+        repo_root / p,
+        img_dir / name,
+        repo_root / name,
+    ])
+
+    # If not found yet, try sibling extensions for same stem in /img and repo root
+    exts = [".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp"]
+
+    # If no extension OR the exact file doesn't exist, try other extensions
+    for folder in [img_dir, repo_root]:
+        for ext in exts:
+            cand = folder / f"{base_stem}{ext}"
+            candidates.append(cand)
+
+    # Deduplicate while preserving order
+    seen = set()
+    ordered = []
+    for c in candidates:
+        if c not in seen:
+            seen.add(c)
+            ordered.append(c)
+
+    for c in ordered:
+        res = _exists(c)
+        if res:
+            return res
+
+    return None
 
     def _exists(p: Path) -> str | None:
         return str(p) if p.exists() else None
@@ -394,35 +445,19 @@ with st.sidebar:
         "Upload a deck (.json, .csv, .xlsx)", type=["json", "csv", "xlsx", "xls"]
     )
 
-    # Reuse existing deck unless a new file is uploaded
-    if "deck" in st.session_state and not deck_file:
-        deck = st.session_state["deck"]
-
-    elif deck_file:
+    if deck_file:
         try:
             deck = load_any_deck(deck_file)
-            st.session_state["deck"] = deck
             st.success(f"Loaded {len(deck['cards'])} cards from {deck_file.name}")
         except Exception as e:
             st.error(f"Failed to load deck: {e}")
             st.stop()
-
     else:
-        # Start-up default: prefer the Excel template if present, otherwise deck.json
-        excel_default = Path("flashcards_template.xlsx")
-        json_default = Path("deck.json")
-
-        if excel_default.exists():
-            deck = load_any_deck(excel_default)
-            st.session_state["deck"] = deck
-            st.caption("Loaded default deck from flashcards_template.xlsx")
-        elif json_default.exists():
-            deck = load_any_deck(json_default)
-            st.session_state["deck"] = deck
-            st.caption("Loaded default deck from deck.json")
-        else:
-            st.info("Upload a deck, or add `flashcards_template.xlsx` or `deck.json` next to app.py.")
+        default_path = Path("deck.json")
+        if not default_path.exists():
+            st.info("Upload a deck or add a `deck.json` next to app.py.")
             st.stop()
+        deck = load_any_deck(default_path)
 
     topics = sorted({c["topic"] for c in deck["cards"]})
     topic = st.selectbox("Filter by topic", options=["(All)"] + topics)
