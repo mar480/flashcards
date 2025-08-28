@@ -469,7 +469,7 @@ with st.sidebar:
     if st.button("🎲 New Card"):
         st.session_state.seed = int(time.time())
         reset_inputs()
-        st.session_state["reset_answer_box"] = True
+        st.session_state.expander_key = st.session_state.get("expander_key", 0) + 1
 
 # Pick a card deterministically from seed
 if not filtered:
@@ -510,21 +510,14 @@ with left:
 st.markdown("---")
 answer_box = st.empty()
 
-# Collapse/refresh the expander when requested
-if st.session_state.get("reset_answer_box"):
-    answer_box.empty()
-    st.session_state["reset_answer_box"] = False
-
+# single expander; label carries a nonce so state doesn't persist
 with answer_box.container():
-    with st.expander("Show full answer", expanded=False):
+    with st.expander(f"Show full answer · {st.session_state.get('expander_key', 0)}",
+                     expanded=False):
         st.markdown(f"**Title:** {card['title']}  \n**Acronym:** `{card['acronym']}`")
         st.write("**Items:**")
         for it in card["items"]:
             st.write(f"- **{it['letter']}** → {it['text']}")
 
-with st.expander("Show full answer", expanded=False):
-    st.markdown(f"**Title:** {card['title']}  \n**Acronym:** `{card['acronym']}`")
-    st.write("**Items:**")
-    for it in card["items"]:
-        st.write(f"- **{it['letter']}** → {it['text']}")
+
 
