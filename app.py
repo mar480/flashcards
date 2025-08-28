@@ -179,6 +179,7 @@ def show_card_image(card: dict, debug: bool = False):
         if raw.lower().startswith(("http://", "https://")):
             if debug:
                 st.caption(f"Loading remote image: {raw}")
+            st.markdown("<div style='margin-top:1em'></div>", unsafe_allow_html=True)
             st.image(raw, caption=None, use_container_width=True)
             return
 
@@ -187,6 +188,7 @@ def show_card_image(card: dict, debug: bool = False):
         if local:
             if debug:
                 st.caption(f"Loading local image: {local}")
+            st.markdown("<div style='margin-top:1em'></div>", unsafe_allow_html=True)
             st.image(local, caption=None, use_container_width=True)
         else:
             if debug:
