@@ -390,6 +390,12 @@ def verdict_icon(ok: bool) -> str:
 # UI & Layout
 # ---------------------------
 
+def reset_inputs():
+    for k in list(st.session_state.keys()):
+        if k.startswith(("h_only_", "h_ac_", "a_only_", "letters_blank_", "letters_some_", "mask_")):
+            st.session_state.pop(k, None)
+
+
 st.set_page_config(page_title="Rote Cards", page_icon="🗂️", layout="centered")
 
 st.title("🗂️ Rote Learning Cards")
@@ -460,6 +466,8 @@ with st.sidebar:
     st.markdown("---")
     if st.button("🎲 New Card"):
         st.session_state.seed = int(time.time())
+        reset_inputs()
+        st.session_state["show_answer"] = False  # collapse the expander
 
 # Pick a card deterministically from seed
 if not filtered:
@@ -498,7 +506,7 @@ with left:
         exercise_missing_keywords(card, difficulty=difficulty or "medium")
 
 st.markdown("---")
-with st.expander("Show full answer"):
+with st.expander("Show full answer", expanded=st.session_state.get("show_answer", False)):
     st.markdown(f"**Title:** {card['title']}  \n**Acronym:** `{card['acronym']}`")
     st.write("**Items:**")
     for it in card["items"]:
