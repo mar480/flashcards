@@ -1,0 +1,280 @@
+{
+  "name": "Audit Exam Rote Learning",
+  "source": "rote-learning.xlsx",
+  "cards": [
+    {
+      "topic": "Audit planning",
+      "title": "Features of assurance engagement",
+      "acronym": "CREST",
+      "items": [
+        {
+          "letter": "C",
+          "text": "Criteria"
+        },
+        {
+          "letter": "R",
+          "text": "Report"
+        },
+        {
+          "letter": "E",
+          "text": "Evidence"
+        },
+        {
+          "letter": "S",
+          "text": "Subject matter"
+        },
+        {
+          "letter": "T",
+          "text": "Three-party relationship"
+        }
+      ]
+    },
+    {
+      "topic": "Audit planning",
+      "title": "Benefits of audit planning",
+      "acronym": "APEAPE",
+      "items": [
+        {
+          "letter": "A",
+          "text": "Appropiate attention to important areas"
+        },
+        {
+          "letter": "P",
+          "text": "Identify/resolve potential problems/risks"
+        },
+        {
+          "letter": "E",
+          "text": "Efficient effective performance"
+        },
+        {
+          "letter": "A",
+          "text": "Audit team/assignment of work"
+        },
+        {
+          "letter": "P",
+          "text": "Partner review"
+        },
+        {
+          "letter": "E",
+          "text": "Coordination of work with experts"
+        }
+      ]
+    },
+    {
+      "topic": "Internal Controls",
+      "title": "Components of entity internal controls",
+      "acronym": "CRIME",
+      "items": [
+        {
+          "letter": "C",
+          "text": "Control environment"
+        },
+        {
+          "letter": "R",
+          "text": "Risk assessment"
+        },
+        {
+          "letter": "I",
+          "text": "Information Systems and communication"
+        },
+        {
+          "letter": "M",
+          "text": "Monitoring"
+        },
+        {
+          "letter": "E",
+          "text": "Existing controls"
+        }
+      ]
+    },
+    {
+      "topic": "Internal Controls",
+      "title": "Significance of deficiencies of internal controls",
+      "acronym": "LOVELY",
+      "items": [
+        {
+          "letter": "L",
+          "text": "Likelihood of deficiencies leading to MMFS"
+        },
+        {
+          "letter": "O",
+          "text": "Interaction with other internal controls"
+        },
+        {
+          "letter": "V",
+          "text": "Volume of activity"
+        },
+        {
+          "letter": "E",
+          "text": "Subjectivity, complexity of estimates"
+        },
+        {
+          "letter": "L",
+          "text": "Susceptibility to loss or fraud"
+        },
+        {
+          "letter": "Y",
+          "text": "Frequency of exceptions of control"
+        }
+      ]
+    },
+    {
+      "topic": "Internal Controls",
+      "title": "Communicating with TCWG",
+      "acronym": "COUR",
+      "items": [
+        {
+          "letter": "C",
+          "text": "Promotes effective 2-way communication"
+        },
+        {
+          "letter": "O",
+          "text": "Obtains information relevant to audit"
+        },
+        {
+          "letter": "U",
+          "text": "Assists understanding of audit matters"
+        },
+        {
+          "letter": "R",
+          "text": "Assists TCWG with discharging responsibilities"
+        }
+      ]
+    },
+    {
+      "topic": "Internal Controls",
+      "title": "Which internal controls to identify",
+      "acronym": "SJPR",
+      "items": [
+        {
+          "letter": "S",
+          "text": "IC over significant risks"
+        },
+        {
+          "letter": "J",
+          "text": "IC over journal entries including odd ones"
+        },
+        {
+          "letter": "P",
+          "text": "IC we plan to test to determine nature, extent, timing of testing"
+        },
+        {
+          "letter": "R",
+          "text": "Other IC auditor thinks approprate based on professional judgment"
+        }
+      ]
+    },
+    {
+      "topic": "Internal Controls",
+      "title": "Limitations of internal control",
+      "acronym": "HECMOJ",
+      "items": [
+        {
+          "letter": "C",
+          "text": "Circumvention of internal control"
+        },
+        {
+          "letter": "J",
+          "text": "Judgement on nature and extent of IC"
+        },
+        {
+          "letter": "N",
+          "text": "Narrative notes"
+        },
+        {
+          "letter": "F",
+          "text": "Flowcharts"
+        },
+        {
+          "letter": "Q",
+          "text": "Questionnaires"
+        }
+      ]
+    },
+    {
+      "topic": "Audit evidence",
+      "title": "Analytical procedures",
+      "acronym": "PFC",
+      "items": [
+        {
+          "letter": "P",
+          "text": "Must be used at planning stage to risk assess and understand entity"
+        },
+        {
+          "letter": "F",
+          "text": "Can be used during fieldwork to obtain SAE"
+        },
+        {
+          "letter": "C",
+          "text": "Must be used at conclusion to confirm overall conclusion"
+        }
+      ]
+    },
+    {
+      "topic": "Audit evidence",
+      "title": "Superivision of work",
+      "acronym": "ESCAPE",
+      "items": [
+        {
+          "letter": "C",
+          "text": "Competence, capability, coaching"
+        },
+        {
+          "letter": "A",
+          "text": "Appropriate action if needed"
+        },
+        {
+          "letter": "P",
+          "text": "Progress against audit plan"
+        },
+        {
+          "letter": "E",
+          "text": "Escalate to senior audit staff if needed"
+        }
+      ]
+    },
+    {
+      "topic": "Audit evidence",
+      "title": "Review of work",
+      "acronym": "PEAR",
+      "items": [
+        {
+          "letter": "P",
+          "text": "Work done in accordance with firm's policies, ISAS, laws"
+        },
+        {
+          "letter": "R",
+          "text": "Revise nature time extent of work performed"
+        },
+        {
+          "letter": "S",
+          "text": "Scope of work"
+        },
+        {
+          "letter": "O",
+          "text": "Organisational status"
+        },
+        {
+          "letter": "D",
+          "text": "Due skill and care"
+        },
+        {
+          "letter": "I",
+          "text": "Independent"
+        },
+        {
+          "letter": "T",
+          "text": "Technical competence"
+        },
+        {
+          "letter": "U",
+          "text": "Understand"
+        },
+        {
+          "letter": "E",
+          "text": "Evaluate"
+        }
+      ]
+    }
+  ]
+}
