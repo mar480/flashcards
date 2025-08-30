@@ -243,15 +243,15 @@ def exercise_heading_plus_acronym(card: Dict):
         ans = st.text_input(f"{it['letter']} →", key=f"h_ac_item_{i}")
         answers_ok.append(normalize(ans) == normalize(it["text"]))
 
-    if st.button("Check answers", type="primary"):
-        st.write("---")
-        for i, it in enumerate(card["items"]):
-            st.write(
-                f"{it['letter']} → {verdict_icon(answers_ok[i])}  "
-                f"**Your:** {st.session_state.get(f'h_ac_item_{i}','')}  "
-                f"**Correct:** {it['text']}"
-            )
-        st.success("All correct! 🎉" if all(answers_ok) else "Keep going!")
+    # if st.button("Check answers", type="primary"):
+    #     st.write("---")
+    #     for i, it in enumerate(card["items"]):
+    #         st.write(
+    #             f"{it['letter']} → {verdict_icon(answers_ok[i])}  "
+    #             f"**Your:** {st.session_state.get(f'h_ac_item_{i}','')}  "
+    #             f"**Correct:** {it['text']}"
+    #         )
+    #     st.success("All correct! 🎉" if all(answers_ok) else "Keep going!")
 
 
 def exercise_acronym_only(card: Dict):
@@ -266,18 +266,18 @@ def exercise_acronym_only(card: Dict):
         ans = st.text_input(f"{it['letter']} →", key=f"a_only_item_{i}")
         answers_ok.append(normalize(ans) == normalize(it["text"]))
 
-    if st.button("Check answers", type="primary"):
-        st.write("---")
-        st.write(
-            f"Title: {verdict_icon(title_ok)}  **Your:** {title_guess}  **Correct:** {card['title']}"
-        )
-        for i, it in enumerate(card["items"]):
-            st.write(
-                f"{it['letter']} → {verdict_icon(answers_ok[i])}  "
-                f"**Your:** {st.session_state.get(f'a_only_item_{i}','')}  "
-                f"**Correct:** {it['text']}"
-            )
-        st.success("All correct! 🎉" if title_ok and all(answers_ok) else "Keep going!")
+    # if st.button("Check answers", type="primary"):
+    #     st.write("---")
+    #     st.write(
+    #         f"Title: {verdict_icon(title_ok)}  **Your:** {title_guess}  **Correct:** {card['title']}"
+    #     )
+    #     for i, it in enumerate(card["items"]):
+    #         st.write(
+    #             f"{it['letter']} → {verdict_icon(answers_ok[i])}  "
+    #             f"**Your:** {st.session_state.get(f'a_only_item_{i}','')}  "
+    #             f"**Correct:** {it['text']}"
+    #         )
+    #     st.success("All correct! 🎉" if title_ok and all(answers_ok) else "Keep going!")
 
 
 def exercise_letters_blank(card: Dict):
@@ -291,15 +291,15 @@ def exercise_letters_blank(card: Dict):
         ans = st.text_input(f"{it['letter']} →", key=f"letters_blank_{i}")
         answers_ok.append(normalize(ans) == normalize(it["text"]))
 
-    if st.button("Check answers", type="primary"):
-        st.write("---")
-        for i, it in enumerate(card["items"]):
-            st.write(
-                f"{it['letter']} → {verdict_icon(answers_ok[i])}  "
-                f"**Your:** {st.session_state.get(f'letters_blank_{i}','')}  "
-                f"**Correct:** {it['text']}"
-            )
-        st.success("All correct! 🎉" if all(answers_ok) else "Keep going!")
+    # if st.button("Check answers", type="primary"):
+    #     st.write("---")
+    #     for i, it in enumerate(card["items"]):
+    #         st.write(
+    #             f"{it['letter']} → {verdict_icon(answers_ok[i])}  "
+    #             f"**Your:** {st.session_state.get(f'letters_blank_{i}','')}  "
+    #             f"**Correct:** {it['text']}"
+    #         )
+    #     st.success("All correct! 🎉" if all(answers_ok) else "Keep going!")
 
 
 def exercise_letters_some_prefilled(card: Dict, prefill_ratio: float = 0.4):
@@ -327,18 +327,18 @@ def exercise_letters_some_prefilled(card: Dict, prefill_ratio: float = 0.4):
             ans = st.text_input(f"{it['letter']} →", key=f"letters_some_{i}")
             answers_ok.append(normalize(ans) == normalize(it["text"]))
 
-    if st.button("Check answers", type="primary"):
-        st.write("---")
-        for i, it in enumerate(card["items"]):
-            if i in locked_idx:
-                st.write(f"{it['letter']} → ✅ (prefilled) **{it['text']}**")
-            else:
-                st.write(
-                    f"{it['letter']} → {verdict_icon(answers_ok[i])}  "
-                    f"**Your:** {st.session_state.get(f'letters_some_{i}','')}  "
-                    f"**Correct:** {it['text']}"
-                )
-        st.success("All correct! 🎉" if all(answers_ok) else "Keep going!")
+    # if st.button("Check answers", type="primary"):
+    #     st.write("---")
+    #     for i, it in enumerate(card["items"]):
+    #         if i in locked_idx:
+    #             st.write(f"{it['letter']} → ✅ (prefilled) **{it['text']}**")
+    #         else:
+    #             st.write(
+    #                 f"{it['letter']} → {verdict_icon(answers_ok[i])}  "
+    #                 f"**Your:** {st.session_state.get(f'letters_some_{i}','')}  "
+    #                 f"**Correct:** {it['text']}"
+    #             )
+    #     st.success("All correct! 🎉" if all(answers_ok) else "Keep going!")
 
 
 def exercise_missing_keywords(card: Dict, difficulty: str = "medium"):
@@ -350,15 +350,15 @@ def exercise_missing_keywords(card: Dict, difficulty: str = "medium"):
         ans = st.text_input("Full text:", key=f"mask_{i}")
         answers_ok.append(normalize(ans) == normalize(it["text"]))
 
-    if st.button("Check answers", type="primary"):
-        st.write("---")
-        for i, it in enumerate(card["items"]):
-            st.write(
-                f"{it['letter']} → {verdict_icon(answers_ok[i])}  "
-                f"**Your:** {st.session_state.get(f'mask_{i}','')}  "
-                f"**Correct:** {it['text']}"
-            )
-        st.success("All correct! 🎉" if all(answers_ok) else "Keep going!")
+    # if st.button("Check answers", type="primary"):
+    #     st.write("---")
+    #     for i, it in enumerate(card["items"]):
+    #         st.write(
+    #             f"{it['letter']} → {verdict_icon(answers_ok[i])}  "
+    #             f"**Your:** {st.session_state.get(f'mask_{i}','')}  "
+    #             f"**Correct:** {it['text']}"
+    #         )
+    #     st.success("All correct! 🎉" if all(answers_ok) else "Keep going!")
 
 def mask_text(s: str, difficulty: str = "medium") -> str:
     """
@@ -383,8 +383,7 @@ def mask_text(s: str, difficulty: str = "medium") -> str:
                 out.append(ch)
         return "".join(out)
 
-def verdict_icon(ok: bool) -> str:
-    return "✅" if ok else "❌"
+
 
 # ---------------------------
 # UI & Layout
