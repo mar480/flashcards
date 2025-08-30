@@ -280,16 +280,16 @@ def exercise_acronym_only(card: Dict):
     #     st.success("All correct! 🎉" if title_ok and all(answers_ok) else "Keep going!")
 
 
-def exercise_letters_blank(card: Dict):
-    st.markdown(
-        f"#### Letters: `{''.join([it['letter'] for it in card['items']])}`"
-    )
-    st.caption(f"Topic: {card['topic']} — Card: {card['title']}")
+# def exercise_letters_blank(card: Dict):
+#     st.markdown(
+#         f"#### Letters: `{''.join([it['letter'] for it in card['items']])}`"
+#     )
+#     st.caption(f"Topic: {card['topic']} — Card: {card['title']}")
 
-    answers_ok = []
-    for i, it in enumerate(card["items"]):
-        ans = st.text_input(f"{it['letter']} →", key=f"letters_blank_{i}")
-        answers_ok.append(normalize(ans) == normalize(it["text"]))
+#     answers_ok = []
+#     for i, it in enumerate(card["items"]):
+#         ans = st.text_input(f"{it['letter']} →", key=f"letters_blank_{i}")
+#         answers_ok.append(normalize(ans) == normalize(it["text"]))
 
     # if st.button("Check answers", type="primary"):
     #     st.write("---")
@@ -443,7 +443,7 @@ with st.sidebar:
             "Card heading only",
             "Card heading + acronym",
             "Acronym only",
-            "Letters down the side (all blank)",
+            # "Letters down the side (all blank)",
             "Letters down the side (some prefilled)",
             "Missing key words",
         ],
@@ -501,8 +501,8 @@ with left:
         exercise_heading_plus_acronym(card)
     elif mode == "Acronym only":
         exercise_acronym_only(card)
-    elif mode == "Letters down the side (all blank)":
-        exercise_letters_blank(card)
+    # elif mode == "Letters down the side (all blank)":
+    #     exercise_letters_blank(card)
     elif mode == "Letters down the side (some prefilled)":
         exercise_letters_some_prefilled(card, prefill_ratio=prefill_ratio)
     elif mode == "Missing key words":
