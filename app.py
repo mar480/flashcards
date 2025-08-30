@@ -487,7 +487,8 @@ left, right = st.columns([2, 1], vertical_alignment="top")
 
 with right:
     # Only render once; show debug details if enabled
-    show_card_image(card) #, debug=show_img_debug)
+    if mode != "Card heading only":
+        show_card_image(card) #, debug=show_img_debug)
     if st.button("🎲 New Card"):
         st.session_state.seed = int(time.time())
         reset_inputs()
