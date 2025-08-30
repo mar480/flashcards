@@ -213,24 +213,24 @@ def exercise_heading_only(card: Dict):
     st.caption(f"Topic: {card['topic']}")
 
     acronym_guess = st.text_input("Acronym", key="h_only_acronym")
-    ac_ok = normalize(acronym_guess) == normalize(card["acronym"])
-    st.write(f"Acronym: {verdict_icon(ac_ok)}")
+    # ac_ok = normalize(acronym_guess) == normalize(card["acronym"])
+    # st.write(f"Acronym: {verdict_icon(ac_ok)}")
 
-    answers_ok = []
+    # answers_ok = []
     # for i, it in enumerate(card["items"]):
     #     ans = st.text_input(f"{it['letter']} →", key=f"h_only_item_{i}")
     #     answers_ok.append(normalize(ans) == normalize(it["text"]))
 
-    if st.button("Check answers", type="primary"):
-        st.write("---")
-        st.write(f"Acronym: {verdict_icon(ac_ok)}")
+    # if st.button("Check answers", type="primary"):
+        # st.write("---")
+        # st.write(f"Acronym: {verdict_icon(ac_ok)}")
         # for i, it in enumerate(card["items"]):
         #     st.write(
         #         f"{it['letter']} → {verdict_icon(answers_ok[i])}  "
         #         f"**Your:** {st.session_state.get(f'h_only_item_{i}','')}  "
         #         f"**Correct:** {it['text']}"
         #     )
-        st.success("All correct! 🎉" if ac_ok else "Keep going!") #and all(answers_ok)
+        # st.success("All correct! 🎉" if ac_ok else "Keep going!") #and all(answers_ok)
 
 
 def exercise_heading_plus_acronym(card: Dict):
