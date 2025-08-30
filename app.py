@@ -205,7 +205,7 @@ def show_card_image(card: dict, debug: bool = False):
 # ---------------------------
 
 def verdict_icon(ok: bool) -> str:
-    return "✅" if ok else "❌"
+    return # "✅" if ok else "❌"
 
 
 def exercise_heading_only(card: Dict):
@@ -398,7 +398,7 @@ def reset_inputs():
 
 st.set_page_config(page_title="Rote Cards", page_icon="🗂️", layout="centered")
 
-st.title("🗂️ Rote Learning Cards")
+# st.title("🗂️ Rote Learning Cards")
 with st.sidebar:
     st.markdown("### Deck")
     deck_file = st.file_uploader(
@@ -464,7 +464,7 @@ with st.sidebar:
     else:
         prefill_ratio = 0.4
 
-    show_img_debug = st.checkbox("Debug images", value=False)
+    # show_img_debug = st.checkbox("Debug images", value=False)
     st.markdown("---")
     if st.button("🎲 New Card"):
         st.session_state.seed = int(time.time())
@@ -480,18 +480,18 @@ idx = random.Random(st.session_state.seed).randint(0, len(filtered) - 1)
 card = filtered[idx]
 
 # Title banner
-st.markdown(
-    f"""
-    <div style="background:#166534; color:#fff; padding:12px 16px; border-radius:8px; font-weight:600; letter-spacing:0.2px;">{card['title']}</div>
-    """,
-    unsafe_allow_html=True,
-)
+# st.markdown(
+#     f"""
+#     <div style="background:#166534; color:#fff; padding:12px 16px; border-radius:8px; font-weight:600; letter-spacing:0.2px;">{card['title']}</div>
+#     """,
+#     unsafe_allow_html=True,
+# )
 
 left, right = st.columns([2, 1], vertical_alignment="top")
 
 with right:
     # Only render once; show debug details if enabled
-    show_card_image(card, debug=show_img_debug)
+    show_card_image(card) #, debug=show_img_debug)
 
 with left:
     if mode == "Card heading only":
