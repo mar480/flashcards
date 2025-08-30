@@ -465,11 +465,8 @@ with st.sidebar:
         prefill_ratio = 0.4
 
     # show_img_debug = st.checkbox("Debug images", value=False)
-    st.markdown("---")
-    if st.button("🎲 New Card"):
-        st.session_state.seed = int(time.time())
-        reset_inputs()
-        st.session_state.expander_key = st.session_state.get("expander_key", 0) + 1
+    # st.markdown("---")
+
 
 # Pick a card deterministically from seed
 if not filtered:
@@ -492,6 +489,10 @@ left, right = st.columns([2, 1], vertical_alignment="top")
 with right:
     # Only render once; show debug details if enabled
     show_card_image(card) #, debug=show_img_debug)
+    if st.button("🎲 New Card"):
+        st.session_state.seed = int(time.time())
+        reset_inputs()
+        st.session_state.expander_key = st.session_state.get("expander_key", 0) + 1
 
 with left:
     if mode == "Card heading only":
