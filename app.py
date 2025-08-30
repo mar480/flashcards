@@ -255,6 +255,7 @@ def exercise_heading_plus_acronym(card: Dict):
 
 
 def exercise_acronym_only(card: Dict):
+    st.subheader(card["title"])
     st.markdown(f"### Acronym: `{card['acronym']}`")
     st.caption(f"Topic: {card['topic']}")
 
@@ -303,10 +304,11 @@ def exercise_acronym_only(card: Dict):
 
 
 def exercise_letters_some_prefilled(card: Dict, prefill_ratio: float = 0.2):
+    st.subheader(card["title"])
     st.markdown(
         f"#### Letters: `{''.join([it['letter'] for it in card['items']])}`"
     )
-    st.caption(f"Topic: {card['topic']} — Card: {card['title']}")
+    st.caption(f"Topic: {card['topic']}") # — Card: {card['title']}")
 
     n = len(card["items"])
     k = max(1, int(n * prefill_ratio))
@@ -342,7 +344,8 @@ def exercise_letters_some_prefilled(card: Dict, prefill_ratio: float = 0.2):
 
 
 def exercise_missing_keywords(card: Dict, difficulty: str = "hard"):
-    st.caption(f"Topic: {card['topic']} — Card: {card['title']}")
+    st.subheader(card["title"])
+    st.caption(f"Topic: {card['topic']}") # — Card: {card['title']}")
     answers_ok = []
     for i, it in enumerate(card["items"]):
         masked = mask_text(it["text"], difficulty=difficulty)
@@ -458,7 +461,7 @@ with st.sidebar:
 
     if mode == "Letters down the side (some prefilled)":
         prefill_ratio = st.slider(
-            "Prefill ratio", min_value=0.2, max_value=0.8, value=0.4, step=0.1
+            "Prefill ratio", min_value=0.2, max_value=0.8, value=0.2, step=0.1
         )
     else:
         prefill_ratio = 0.2
