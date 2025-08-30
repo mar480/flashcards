@@ -461,7 +461,7 @@ with st.sidebar:
             "Prefill ratio", min_value=0.2, max_value=0.8, value=0.4, step=0.1
         )
     else:
-        prefill_ratio = 0.4
+        prefill_ratio = 0.2
 
     # show_img_debug = st.checkbox("Debug images", value=False)
     # st.markdown("---")
