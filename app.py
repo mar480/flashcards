@@ -302,7 +302,7 @@ def exercise_acronym_only(card: Dict):
     #     st.success("All correct! 🎉" if all(answers_ok) else "Keep going!")
 
 
-def exercise_letters_some_prefilled(card: Dict, prefill_ratio: float = 0.4):
+def exercise_letters_some_prefilled(card: Dict, prefill_ratio: float = 0.2):
     st.markdown(
         f"#### Letters: `{''.join([it['letter'] for it in card['items']])}`"
     )
@@ -341,7 +341,7 @@ def exercise_letters_some_prefilled(card: Dict, prefill_ratio: float = 0.4):
     #     st.success("All correct! 🎉" if all(answers_ok) else "Keep going!")
 
 
-def exercise_missing_keywords(card: Dict, difficulty: str = "medium"):
+def exercise_missing_keywords(card: Dict, difficulty: str = "hard"):
     st.caption(f"Topic: {card['topic']} — Card: {card['title']}")
     answers_ok = []
     for i, it in enumerate(card["items"]):
@@ -360,7 +360,7 @@ def exercise_missing_keywords(card: Dict, difficulty: str = "medium"):
     #         )
     #     st.success("All correct! 🎉" if all(answers_ok) else "Keep going!")
 
-def mask_text(s: str, difficulty: str = "medium") -> str:
+def mask_text(s: str, difficulty: str = "hard") -> str:
     """
     Simple keyword masking for the 'Missing key words' mode:
       - easy: mask vowels
@@ -451,7 +451,7 @@ with st.sidebar:
 
     if mode == "Missing key words":
         difficulty = st.select_slider(
-            "Masking difficulty", options=["easy", "medium", "hard"], value="medium"
+            "Masking difficulty", options=["easy", "medium", "hard"], value="hard"
         )
     else:
         difficulty = None
@@ -506,7 +506,7 @@ with left:
     elif mode == "Letters down the side (some prefilled)":
         exercise_letters_some_prefilled(card, prefill_ratio=prefill_ratio)
     elif mode == "Missing key words":
-        exercise_missing_keywords(card, difficulty=difficulty or "medium")
+        exercise_missing_keywords(card, difficulty="hard")
 
 st.markdown("---")
 answer_box = st.empty()
